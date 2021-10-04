@@ -5,23 +5,22 @@ output:
                 keep_md: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, root.dir = "C:/Users/petey/Documents")
-library(dplyr)
-```
+
 
 # Reproducible Research: Course Project 1
 ## Loading and preprocessing the data
 ## 1. Load the data
 Create a data directory if it does not already exist, and unzip
 the data into that directory.
-```{r, echo = TRUE}
+
+```r
 if(!file.exists("data")) {dir.create("data")}
 unzip("./data/repdata_data_activity.zip", exdir = "./data")
 setwd("./data")
 ```
 Read in the data to an object called activity. 
-```{r, echo = TRUE}
+
+```r
 activity <- read.csv("./data/activity.csv", stringsAsFactors = TRUE)
 ```
 
@@ -29,27 +28,43 @@ activity <- read.csv("./data/activity.csv", stringsAsFactors = TRUE)
 ### 1. Calculate the total number of steps taken per day.
 We can use the aggregate() function to sum the steps for each date. The
 result will be stored in an object called tSteps
-```{r, echo = TRUE}
+
+```r
 tSteps <- aggregate(activity$steps, list(activity$date), FUN = sum)
 colnames(tSteps) <- c("date", "steps")
 ```
 
 ### 2. Make a histogram of the total number of steps taken each day
 We can use the hist() function to accomplish this task
-```{r, echo = TRUE}
+
+```r
 hist(tSteps$steps, xlab = "Total Daily Steps", 
      main = "Histogram of Total Daily Steps")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 ### 3. Calculate and report the mean and median of the total number of steps  
 ### taken per day.
 We can just call the functions mean() and median() on the steps column
 of our tSteps object.
-```{r, echo = TRUE}
+
+```r
 tMean <- mean(tSteps$steps, na.rm = TRUE)
 tMedian <- median(tSteps$steps, na.rm = TRUE)
 tMean
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 tMedian
+```
+
+```
+## [1] 10765
 ```
 Of the total number of steps taken per day: the mean is 10766.19, and 
 the median is 10765.
@@ -60,7 +75,8 @@ the median is 10765.
 We want the daily average amount of steps for each interval. We can calculate
 this by grouping the activity data set by interval and calculating the
 mean for each interval (after removing the NAs)
-```{r, echo = TRUE}
+
+```r
 aInt <- activity %>% 
         filter(!is.na(steps)) %>%
         group_by(interval) %>%
@@ -69,16 +85,24 @@ plot(aInt, type = "l", xlab = "Interval", ylab = "Average Daily Steps",
      main = "Average Daily Steps for each 5-Minute Interval")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 ### 2. Which 5-minute interval, on average across all the days in the dataset, 
 ### contains the maximum number of steps?
 All we have to do here is sort our previous data set by decreasing and
 select the first row.
-```{r, echo = TRUE}
+
+```r
 a <- as.data.frame(aInt)
 colnames(a) <- c("interval", "ave.steps")
 a <- a[with(a, order(ave.steps, decreasing = TRUE)),]
 topInt <- a[1, ]
 topInt
+```
+
+```
+##     interval ave.steps
+## 104      835  206.1698
 ```
 The interval across all days that contains the average maximum number of steps
 (~ 206 steps) is interval 835.
@@ -87,9 +111,14 @@ The interval across all days that contains the average maximum number of steps
 ### 1. Calculate and report the total number of missing values in the dataset.
 We can do this by summing the TRUE values returned by is.na() on the steps
 variable
-```{r, echo = TRUE}
+
+```r
 mis <- sum(is.na(activity$steps))
 mis
+```
+
+```
+## [1] 2304
 ```
 There are 2304 missing values in the dataset.
 
@@ -100,7 +129,8 @@ We can impute the missing values using the average daily value for the
 ### 3. Create a new dataset that is equal to the original dataset but with the
 ### missing data filled in.
 Using our devised strategy as stated above:
-```{r, echo = TRUE}
+
+```r
 colnames(aInt) <- c("interval", "steps")
 activity$srep <- aInt$steps
 activity$steps[is.na(activity$steps)] <- activity$srep[is.na(activity$steps)]
@@ -112,17 +142,33 @@ repAct <- select(activity, c("steps", "date", "interval"))
 ### Do these values differ from the estimate from the first part of the
 ### assignment? What is the impact of imputing missing data on the estimates of 
 ### the total daily number of steps?
-```{r, echo = TRUE}
+
+```r
 imSteps <- aggregate(repAct$steps, list(repAct$date), FUN = sum)
 colnames(imSteps) <- c("date", "steps")
 
 hist(imSteps$steps, xlab = "Total Daily Steps", 
      main = "Histogram of Total Daily Steps")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+```r
 imMean <- mean(imSteps$steps)
 imMedian <- median(imSteps$steps)
 imMean
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 imMedian
+```
+
+```
+## [1] 10766.19
 ```
 The mean value has stayed the same (10766.19) after imputing missing data, but the median value has increased (from 10765 to 10766.19). These results are expected. The mean should not have changed much, if at all, due to the relatively low ratio of missing values to total values contained in our dataset. The median should have increased due to the fact that there are now numerical values in our dataset where there were previously none.
 
@@ -133,7 +179,8 @@ The mean value has stayed the same (10766.19) after imputing missing data, but t
 We first have to change all of the dates to a proper date class. Then we
 can find the specific days using the weekdays() function and appropriately assign
 "weekday" (Monday - Friday) and "weekend" (Saturday & Sunday).
-```{r, echo = TRUE}
+
+```r
 dAct <- repAct 
 dAct$date <- as.Date(as.character(repAct$date))
 dAct$weekday <- weekdays(dAct$date)
@@ -151,7 +198,8 @@ colnames(dAct)[4] <- "dayclass"
 ### or weekend days.
 To accomplish this, we must first create 2 new datasets. The first will contain
 the data for weekdays and the second will contain data for weekend days.
-```{r, echo = TRUE}
+
+```r
 aDay <- dAct %>%
         filter(as.character(dayclass) == "weekday") %>%
         group_by(interval) %>%
@@ -168,7 +216,8 @@ colnames(aEnd)[2] <- "steps"
 ```
 
 Now we can recombine these two new datasets into one.
-```{r, echo = TRUE}
+
+```r
 aDayend <- as.data.frame(cbind(aDay$interval, aDay$steps, aEnd$steps))
 colnames(aDayend) <- c("interval", 
                        "average.weekday.steps", 
@@ -176,7 +225,8 @@ colnames(aDayend) <- c("interval",
 ```
 
 Now we are ready to make our panel plot.
-```{r, echo = TRUE}
+
+```r
 par(mfrow = c(2,1))
 par(mar = c(4, 5, 4, 5))
 plot(aDayend$interval, aDayend$average.weekday.steps, type = "l", 
@@ -189,3 +239,5 @@ plot(aDayend$interval, aDayend$average.weekend.steps, type = "l",
      main = "Weekend Steps",
      ylim = c(0, 250))
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
